@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ゼミプロト</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background-color: #ddd;
+        }
+
+        canvas {
+            background-color: #fff;
+        }
+    </style>
+    <canvas id="view" width="700px" height="500px"></canvas>
+    <!--スクリプト内だと動かないらしい-->
+
+    <script src="socket.io/socket.io.js"></script>
+    <!--なんかコレないとio is not difindする-->
+
+    <script src="2DActTool.js"></script>
+
+    <script type="text/javascript">
+        //以下鯖で使う変数
+        let socket = io.connect();
+
+        let p1 = false;
+        let p2 = false;
+        let pnum = null;
+
+        let proofP1 = false;
+        let proofP2 = false;
+
+        let roomNo = 0;
+
+        // 実験で用いるパラメータ関係
+        let convDist = 80; // コンバージェンスを動かす閾値(距離)
+        let DRDist = 2; // DRを動かす閾値(距離)
+        let connectDelay = 200; // 通信遅延
+
+        let fps = 1000 / 30; // 画面の更新間隔
+
+        //1Pの座標
+        let nowX1 = 0;
+        let nowY1 = 0;
+
+        let lisX1 = 0;
+        let lisY1 = 0;
+
+        //2Pの座標
+        let nowX2 = 40;
+        let nowY2 = 0;
+
+        let lisX2 = 0;
+        let lisY2 = 0;
+
+        let PW = 32;
+        let PH = 32;
+
+        // 相方と送受信する系の情報
+        let lastFriendX = 0;
+        let lastFriendY = 0;
+
+        let nowFriendX = 0;
+        let nowFriendY = 0;
+
+        let updatedFriendX = 0;
+        let updatedFriendY = 0;
+
+        let myVecX = 0;
+        let myVecY = 0;
+
+        let friendVecX = 0;
+        let friendvecY = 0;
+
+        let getTimeChice = 0; // タイムスタンプ取得機能の選択用
+        // 0:ローカルで所得 1:ntpで所得(未実装)
+
+        let timeSt = 0; // タイムスタンプ
+        let FrTime = 0; // 相方のタイムスタンプ
+        let lastFrTime = 0; // 最後に送信された相方のタイムスタンプ
+        let twoBeforeFrTime = 0 // 2回前の相方のタイムスタンプ
+        let delayTime = 0; // 遅延の時間
+        let delayLoop = 0; // 相方のデータが更新されない状態で何回ループしたか
+        let addDelay = 0; // 受信した段階で出る彼我の遅延
+
+        let debagDist = 0; // 距離測るやつ
+
+        //以下クライアント側で完結する変数
+        // キーボードの入力状態を記録する配列の定義
+        var input_key_buffer = new Array();
+
+        // キーボードの入力イベントをトリガーに配列のフラグ値を更新させる
+        window.addEventListener("keydown", handleKeydown);
+        function handleKeydown(e) {
+            e.preventDefault();
+            input_key_buffer[e.keyCode] = true;
+        }
+
+        window.addEventListener("keyup", handleKeyup);
+        function handleKeyup(e) {
+            e.preventDefault();
+            input_key_buffer[e.keyCode] = false;
+        }
+
+        // canvas要素の取得
+        const canvas = document.getElementById("view");
+        const ctx = canvas.getContext("2d");
+
+        let active = false;
+
+        let debug = false; //デバッグモード
+
+        // 画面スクロール用の変数
+        var scrollX = 0;
+
+        // 上下方向の速度
+        var vy = 0;
+        // 重力加速度
+        let grv = 0.5;
+        // ジャンプしたか否かのフラグ値
+        var isJump = false;
+
+        // ゲームオーバーか否かのフラグ値
+        var isGameOver = false;
+
+        // コンバージェンスが動いたときのフラグ
+        let convON = false;
+
+        // ブロック要素の定義(本当は別個にJSONファイルがあるのが望ましい)
+        const orgBlocks = [
+            { x: 0, y: 420, w: 100, h: 32, g: 0 },
+            { x: 150, y: 360, w: 100, h: 32, g: 0 },
+            //{ x: 300, y: 132, w: 730, h: 32, g: 0 },
+            { x: 150, y: 150, w: 100, h: 32, g: 0 },
+            { x: 350, y: 150, w: 680, h: 32, g: 0 },
+            { x: 200, y: 420, w: 100, h: 32, g: 1 }
+        ];
+
+        var blocks = JSON.parse(JSON.stringify(orgBlocks));
+
+        socket.emit("memSyncFromCli");
+        socket.on("memSyncFromSvr", function (P1f, P2f) {
+            console.log("\"memSync\" is ignite from server.\np1f:" + P1f + " ,p2f:" + P2f);
+
+            if (pnum == null) {
+                if (P1f == false) {
+                    pnum = 1;
+                    socket.emit("loginFromCli", pnum);
+                } else if (P1f == true && P2f == false) {
+                    pnum = 2;
+                    socket.emit("loginFromCli", pnum);
+                } else {
+                    ;
+                }
+            }
+        });
+
+        socket.on("checkLoginFromSvr", function (P1f, P2f) {
+            console.log("\"checkLogin\" is ignite from server.\npnum:" + pnum);
+            if (P1f == true) p1 = true;
+            if (P2f == true && p1 == true) p2 = true;
+
+            if (p1 == true && p2 == true) {
+                socket.emit("closeLoginFromCli");
+            } else {
+                setTimeout(function () {
+                    socket.emit("checkLoginFromCli");
+                }, 600);
+            }
+        });
+
+        socket.on("closeLoginFromSvr", function () {
+            console.log("\"closeLogin\" is ignite from server.");
+            socket.emit("startStageFromCli", pnum);
+        });
+
+        socket.on("startStageFromSvr", function (svX1, svY1, svX2, svY2) {
+            console.log("\"startStage\" is ignite from server.");
+            nowX1 = svX1;
+            nowY1 = svY1;
+            nowX2 = svX2;
+            nowY2 = svY2;
+            isGameOver = false;
+            isJump = false;
+            vy = 0;
+            scrollX = 0;
+        });
+
+        socket.on("waitRestartForOne", function () { // 死にましたわ
+            console.log("\"waitRestart\" is ignite from server. 1");
+            isGameOver == true;
+            setInterval(function () {
+                socket.emit("GameOverFromOne");
+            }, 300);
+        });
+
+        socket.on("waitRestartForTwo", function () { // 死にましたわ2
+            console.log("\"waitRestart\" is ignite from cloant. 2");
+            isGameOver == true;
+            setInterval(function () {
+                socket.emit("GameOverFromTwo");
+            }, 300);
+        });
+
+        socket.on("restartFromSvr", function () {
+            console.log("\"restart\" is ignite from cloant.");
+            alert("GAMEOVER!!");
+            socket.emit("startStageFromCli");
+        });
+
+        function sendForSvr() { // 自分の座標を送る
+            getTimeFoundation();
+
+            //console.log("send");
+            if (pnum == 1) {
+                
+                socket.emit("sendOneFromCli", nowX1, nowY1, myVecX, myVecY, timeSt, updatedFriendX, updatedFriendY, convON);
+            } else if (pnum == 2) {
+                socket.emit("sendTwoFromCli", nowX2, nowY2, myVecX, myVecY, timeSt, updatedFriendX, updatedFriendY, convON);
+            } else {
+                ;
+            }
+            //setTimeout(lisPos, 10);
+        }
+
+        function lisPos() { // 他プレイヤーの座標を聞く
+            //console.log("lisPos");
+            if (pnum == 1) {
+                //console.log("lisPos1");
+                socket.emit("lisPosFromOne");
+            } else if (pnum == 2) {
+                //console.log("lisPos2");
+                socket.emit("lisPosFromTwo");
+            } else {
+                ;
+            }
+        }
+
+        socket.on("infoPosForOne", function (svX, svY, svVecX, svVecY, svT) {
+            // 後でプレイヤーで発火を限定する予定
+            if (pnum == 1) {
+                //console.log("infoP1");
+                updatedFriendX = svX;
+                updatedFriendY = svY;
+                friendVecX = svVecX;
+                friendvecY = svVecY;
+                FrTime = svT;
+                getTimeFoundation();
+                addDelay = timeSt - svT;
+            }
+            /**
+             * 
+            */
+
+        });
+
+        socket.on("infoPosForTwo", function (svX, svY, svVecX, svVecY, svT) {
+            // 同上
+            if (pnum == 2) {
+                //console.log("infoP2");
+                updatedFriendX = svX;
+                updatedFriendY = svY;
+                friendVecX = svVecX;
+                friendvecY = svVecY;
+                FrTime = svT;
+                getTimeFoundation();
+                addDelay = timeSt - svT;
+            }
+
+        });
+
+        function getTimeFoundation() {
+            if (getTimeChice == 1) {
+                // 未実装。ntpで時間を所得する関数を呼ぶ
+            } else {
+                timeSt = getTimeLocal();
+            }
+        }
+
+        function getTimeLocal() { // timeStをローカルで更新(ntpとかで聞いたりしない)
+            const date1 = new Date();
+            let gotNowMyTime = date1.getFullYear() +
+                ("00" + (date1.getMonth() + 1)).slice(-2) +
+                ("00" + (date1.getDate())).slice(-2) +
+                ("00" + (date1.getHours())).slice(-2) +
+                ("00" + (date1.getMinutes())).slice(-2) +
+                ("00" + (date1.getSeconds())).slice(-2) +
+                "." + ("000" + (date1.getMilliseconds())).slice(-3);
+            return gotNowMyTime;
+        }
+
+        function leftMv(x) {
+            x = x - 4;
+            return x;
+        }
+
+        function rightMv(x) {
+            x = x + 4;
+            return x;
+        }
+
+        // 変更前後のxy座標を受け取って、ブロック上に存在していればそのブロックの情報を、存在していなければnullを返す
+        function getBlockTargrt(x, y, updatedMyX, updatedMyY, w, h) {
+            // 全てのブロックに対して繰り返し処理をする
+            for (const block of blocks) {
+                let obj = { target: null, hit: null };
+                obj.target = block;
+                obj.hit = checkHitRectangle(block, x, y, updatedMyX, updatedMyY, w, h);
+                if (obj.hit != null) {
+                    return obj;
+                }
+            }
+            return null;
+        }
+
+        function getPlayerHit(x, y, updatedMyX, updatedMyY, w, h) {
+            let arrayP = { x: x, y: y }
+            let obj = { target: null, hit: null };
+            if (pnum == 1) {
+                obj.target = { x: nowX2, y: nowY2, w: PW, h: PH };
+                obj.hit = checkHitRectangle(obj.target, x, y, updatedMyX, updatedMyY, w, h)
+                if (obj.hit != null) {
+                    return obj;
+                }
+                return null;
+
+            } else if (pnum == 2) {
+                obj.target = { x: nowX1, y: nowY1, w: PW, h: PH };
+                obj.hit = checkHitRectangle(obj.target, x, y, updatedMyX, updatedMyY, w, h)
+                if (obj.hit != null) return obj;
+                return null;
+            } else {
+                ;
+            }
+            // 最後までブロック要素を返さなかった場合はブロック要素の上にいないということなのでnullを返却する
+            return null;
+        }
+
+        /**
+         * 誤差が半キャラ以下:ワープで
+         * 誤差が小:DR
+         * 誤差が大きい:収束処理
+         * 誤差が少なくても相手Pが動いていなければ収束処理にするか？
+        */
+
+        /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
+         * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫ 
+         * interP(interpolation:補間)
+         * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
+        function interP(frX, frY, updatedFriendX, updatedFriendY, inPVecX, inPVecY) {
+            //console.log("inP")
+            ctx.fillStyle = "black";
+            ctx.fillText("Vec:" + inPVecX + "," + inPVecY, 0, 20, 500);
+            let upFrArray = { x: frX, y: frY };
+            let x = Math.abs(frX - updatedFriendX);
+            let y = Math.abs(frY - updatedFriendY);
+            let dist = Math.sqrt((x * x) + (y * y));
+            debagDist = dist;
+            if (dist > convDist) {
+                convON = true;
+                console.log("┯┯┯┯");
+                console.log(frX, frY, updatedFriendX, updatedFriendY);
+                console.log("vecX:" + inPVecX + "\nvecY:" + inPVecY);
+                console.log("muVec:" + myVecX + " " + myVecY);
+                console.log("dis:" + dist + " interM ignite")
+                upFrArray = interMo(upFrArray, updatedFriendX, updatedFriendY, 4);
+                console.log("┷┷┷┷");
+            } else if (dist >= DRDist && dist < convDist/*&&inPVecX!=0&&inPVecY!=0*/) {
+                convON = false;
+                upFrArray = DRecon(upFrArray, updatedFriendX, updatedFriendY, inPVecX, inPVecY);
+            } else {
+                convON = false;
+                upFrArray.x = updatedFriendX;
+                upFrArray.y = updatedFriendY;
+            }
+            return upFrArray;
+        }
+
+        /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
+         * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫
+         * DRecon(Dead Reckoning)
+         * 相方から貰った前フレームの座標を用いて
+         * 当てずっぽうで座標を予測する処理
+         * 
+         * 以下仮引数
+         * nowArray:更新後の座標を入れた配列
+         * frX:最後に送信された相方のx座標
+         * frY:同上。yバージョン
+         * mx:最後に送信された相方のx軸の移動速度。moveXの略
+         * my:同上。
+         * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
+        function DRecon(nowArray, frX, frY, mx, my) {
+            ctx.fillStyle = "black";
+            ctx.fillText("Dead Reckoning:ON", 0, 40, 500);
+            console.log("vecX:" + mx + "\nvecY:" + my);
+            nowArray.x = updatedFriendX + mx * delayLoop;
+            nowArray.y = updatedFriendY + my * delayLoop;
+            console.log(nowArray.x);
+            return nowArray;
+        }
+
+        /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
+         * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫ 
+         * interMo(:補完処理)
+         * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
+        function interMo(nowArray, imoUpX, imoUpY, imoSpd) {
+            ctx.fillStyle = "black";
+            ctx.fillText("Convergence:ON", 0, 40, 500);
+            console.log("beforeX:" + nowArray.x + "\nbeforeY:" + nowArray.y);
+            if (nowArray.x < imoUpX) {
+                /**
+                 * interMo if階層1
+                 * nowArray.x(次フレームのx座標)がimoUpX(送られてきたx座標)
+                 * より手前(画面上は左側)のとき
+                 * 
+                 * 用は本来の座標の方がxの数値が小さい
+                 */
+                console.log("imo1:" + nowArray.x);
+                if ((imoUpX - nowArray.x) >= imoSpd) {
+                    /**
+                     * interMo if階層2
+                     * 現在と次フレームのx座標の差がimoSpd(補正の最大速度)
+                     * より大きかったときの処理
+                     */
+                    console.log("if:" + nowArray.x);
+                    nowArray.x = nowArray.x + imoSpd;
+                    console.log("next:" + nowArray.x);
+                } else {
+                    nowArray.x = imoUpX;
+                }
+            } else if (nowArray.x > imoUpX) {
+                /**
+                 * interMo if階層1
+                 * nowArray.x(次フレームのx座標)がimoUpX(送られてきたx座標)
+                 * より奥(画面上は右側)のとき
+                 * 
+                 * 用は本来の座標の方がxの数値が大きい
+                 */
+                console.log("imo2:" + nowArray.x);
+                let difX = nowArray.x - imoUpX
+                if (difX >= imoSpd) {
+                    /**
+                     * interMo if階層2
+                     * difX(現在と次フレームのx座標の差)がimoSpd(補正の最大速度)
+                     * より大きかったときの処理
+                     */
+                    console.log("if:" + nowArray.x);
+                    nowArray.x = nowArray.x - imoSpd;
+                    console.log("nextX:" + nowArray.x);
+                } else {
+                    nowArray.x = imoUpX;
+                }
+            } else {
+                console.log("imo3");
+            }
+            if (nowArray.y < imoUpY) {
+                let difY = imoUpY - nowArray.y
+                if (difY >= imoSpd) {
+                    nowArray.y = nowArray.y + imoSpd;
+                    console.log("nextY:" + nowArray.y);
+                } else {
+                    nowArray.y = imoUpY;
+                }
+            } else if (nowArray.y > imoUpY) {
+                let difY = nowArray.y - imoUpY
+                if (difY >= imoSpd) {
+                    nowArray.y = nowArray.y - imoSpd;
+                } else {
+                    nowArray.y = imoUpY;
+                }
+            } else {
+                ;
+            }
+            console.log(nowArray);
+            return nowArray;
+        }
+
+        function displayExis(disMyX, disMyY, disFrX, disFrY, disPNum) {
+            const color = { p1: "red", p2: "blue" };
+            ctx.globalAlpha = 1.0;
+            ctx.fillStyle = "blue";
+            let disNowXbrs = disMyX;// 時機の表示x座標
+            if (disNowXbrs >= 220) disNowXbrs = 220;
+            ctx.fillRect(disNowXbrs, disMyY, 32, 32);
+            let ifscr = false;
+            for (const block of blocks) {
+                if (block.g == 1) {
+                    ctx.fillStyle = "rgb(255,255,0)";
+                } else {
+                    ctx.fillStyle = "black";
+                }
+                let brScr1 = (block.x - disMyX) + 220;
+                if (brScr1 < block.x) {
+                    ifscr = true;
+                } else {
+                    brScr1 = block.x;
+                    ifscr = false;
+                }
+                ctx.fillRect(brScr1, block.y, block.w, block.h);
+            }
+            ctx.globalAlpha = 1.0;
+            ctx.fillStyle = "red";
+            let nowFrXbrs = disFrX;
+            let upFrXbrs = updatedFriendX;
+            if (ifscr == true) {
+                nowFrXbrs = (disFrX - disMyX) + 220;
+                upFrXbrs = (updatedFriendX - disMyX) + 220;
+            } else {
+                ;
+            }
+            ctx.fillRect(nowFrXbrs, disFrY, PW, PH);
+
+            ctx.fillStyle = "black";
+            ctx.fillText("Debug:" + debug + "\nDebug mode → \"D\"key", 0, 60);
+            ctx.fillText("delay : " + delayTime, 0, 80);
+            ctx.fillText("addDelay : " + addDelay + "(" + twoBeforeFrTime + " → " + lastFrTime + ")", 0, 100);
+
+            if (debug == true) {
+                ctx.fillText("X:" + disMyX + "\tY:" + disMyY, disNowXbrs + 36, disMyY, 70);
+                ctx.fillStyle = "rgba(255,0,200,0.5)";
+                ctx.fillText("X:" + disFrX + "\tY:" + disFrY, nowFrXbrs + 36, disFrY, 70);
+                ctx.fillStyle = "rgba(255,0,0,0.2)";
+                ctx.fillRect(upFrXbrs, updatedFriendY, PW, PH);
+                ctx.fillStyle = "rgba(255,0,200,0.5)";
+                ctx.fillText("X:" + updatedFriendX + "\tY:" + updatedFriendY, upFrXbrs + 36, updatedFriendY, 70);
+                if (debagDist > 6) {
+                    ctx.fillStyle = "black";
+                    ctx.beginPath();
+                    ctx.moveTo(upFrXbrs + 16, updatedFriendY + 16);
+                    ctx.lineTo(nowFrXbrs + 16, disFrY + 16);
+                    ctx.stroke();
+                    ctx.fillText("Dist:" + debagDist, (upFrXbrs + nowFrXbrs) / 2, (disFrY + updatedFriendY) / 2, 70);
+                }
+            }
+
+
+        }
+
+        /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
+         * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫
+         * ここからmain関数
+         * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
+        function main() {
+            // 画面全体をクリア
+            ctx.clearRect(0, 0, 700, 500);
+
+            // 更新後の座標
+            var updatedMyX;
+            var updatedMyY;
+
+            if (pnum == 1) {
+                updatedMyX = nowX1;
+                updatedMyY = nowY1;
+            } else {
+                updatedMyX = nowX2;
+                updatedMyY = nowY2;
+            }
+
+            getTimeFoundation();
+
+            if (FrTime != lastFrTime) {
+                delayTime = 0;
+                delayLoop = 0;
+                twoBeforeFrTime = lastFrTime;
+                lastFrTime = FrTime;
+            } else {
+                delayTime = timeSt - lastFrTime;
+                delayLoop += 1;
+            }
+
+            if (isGameOver) {
+
+                // 上下方向は速度分をたす
+                if (pnum == 1) updatedMyY = nowY1 + vy;
+                if (pnum == 2) updatedMyY = nowY2 + vy;
+
+                // 落下速度はだんだん大きくなる
+                vy = vy + 0.5;
+
+                if (nowY1 > 500 || nowY2 > 500) {
+                    // ゲームオーバーのキャラが更に下に落ちてきた時にダイアログを表示し、各種変数を初期化する
+                    if (pnum == 1) {
+                        socket.emit("startStageFromCli");
+                        //socket.emit("GameOverFromOne");
+                    } else {
+                        socket.emit("startStageFromCli");
+                        //socket.emit("GameOverFromTwo");
+                    }
+
+                }
+            } else {
+                // 入力値の確認と反映
+                if (input_key_buffer[37]) {
+                    if (pnum == 1) {
+                        updatedMyX = leftMv(nowX1);
+                    } else if (pnum == 2) {
+                        updatedMyX = leftMv(nowX2);
+                    }
+                }
+                if (input_key_buffer[38]) {
+                    if (isJump == false) {
+                        vy = -12;
+                        isJump = true;
+                    } else if (isJump == true && vy >= 0) {
+                        vy = 0;
+                    } else {
+                        ;
+                    }
+                }
+                if (input_key_buffer[39]) {
+                    if (pnum == 1) {
+                        updatedMyX = rightMv(nowX1);
+                    } else {
+                        updatedMyX = rightMv(nowX2);
+                    }
+                }
+
+                if (input_key_buffer[68]) {// デバッグモードの切り替え
+                    if (debug == false) {
+                        debug = true;
+                    } else {
+                        debug = false;
+                    }
+                }
+
+
+                /**自機が空中に居るか否か
+                 * 空中居るなら着地判定を計算する
+                */
+                if (isJump) {
+                    if (pnum == 1) updatedMyY = nowY1 + vy;
+                    if (pnum == 2) updatedMyY = nowY2 + vy;
+
+                    vy = vy + grv;
+
+                    let blockTarget;
+                    let playerTarget;
+                    if (pnum == 1) {
+                        blockTarget = getBlockTargrt(nowX1, nowY1, updatedMyX, updatedMyY, PW, PH);
+                        playerTarget = getPlayerHit(nowX1, nowY1, updatedMyX, updatedMyY, PW, PH);
+                    }
+                    if (pnum == 2) {
+                        blockTarget = getBlockTargrt(nowX2, nowY2, updatedMyX, updatedMyY, PW, PH);
+                        playerTarget = getPlayerHit(nowX2, nowY2, updatedMyX, updatedMyY, PW, PH);
+                    }
+
+                    if (blockTarget != null) {
+                        if (blockTarget.hit.above == true) {
+                            updatedMyY = blockTarget.target.y - 32;
+                            isJump = false;
+                        }
+                    }
+                    if (playerTarget != null) {
+                        if (playerTarget.hit.above == true) {
+                            updatedMyY = playerTarget.target.y - 32;
+                            isJump = false;
+                        }
+                    }
+                } else {
+                    // 自機の座標やらの計算
+                    if (pnum == 1) {
+                        let blockTarget = getBlockTargrt(nowX1, nowY1, updatedMyX, updatedMyY, PW, PH);
+                        if (blockTarget == null) {
+                            isJump = true;
+                            vy = 0;
+                        }
+                    } else if (pnum == 2) {
+                        let blockTarget = getBlockTargrt(nowX2, nowY2, updatedMyX, updatedMyY, PW);
+                        if (blockTarget == null) {
+                            isJump = true;
+                            vy = 0;
+                        }
+                    } else {
+                        ;
+                    }
+                }
+                if ((pnum == 1 && nowY1 > 500 + PH) || (pnum == 2 && nowY2 > 500 + PH)) {
+                    isGameOver = true;
+                }
+            }
+
+            if (pnum == 1) {
+                myVecX = updatedMyX - nowX1;
+                myVecY = updatedMyY - nowY1;
+                nowX1 = updatedMyX;
+                nowY1 = updatedMyY;
+
+                let updatedFriendCoor = interP(nowX2, nowY2, updatedFriendX, updatedFriendY, friendVecX, friendvecY);
+                nowX2 = updatedFriendCoor.x;
+                nowY2 = updatedFriendCoor.y;
+
+                displayExis(nowX1, nowY1, nowX2, nowY2, pnum);
+            } else {
+                myVecX = updatedMyX - nowX2;
+                myVecY = updatedMyY - nowY2;
+                nowX2 = updatedMyX;
+                nowY2 = updatedMyY;
+
+                let updatedFriendCoor = interP(nowX1, nowY1, updatedFriendX, updatedFriendY, friendVecX, friendvecY);
+                nowX1 = updatedFriendCoor.x;
+                nowY1 = updatedFriendCoor.y;
+
+                displayExis(nowX2, nowY2, nowX1, nowY1, pnum);
+            }
+        }
+
+        setInterval(main, fps);
+        setInterval(sendForSvr, connectDelay);
+
+        /**
+         *
+        */
+
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

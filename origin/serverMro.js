@@ -6,7 +6,7 @@ app.use("/", express.static(__dirname + "/public"));//このディレクトリ�
 server.listen(8080);
 
 //console.log(sv);
-let logDir=__dirname+"\\log"; // ログファイルのディレクトリ
+let logDir=__dirname+"\\log\\"; // ログファイルのディレクトリ
 console.log(logDir);
 
 let roomstr = new Array(16);
@@ -96,7 +96,7 @@ function createCSV(N) {
     if (N == 1) {
         fs.writeFile(logDir + fileName01, column, function (err) {
             if (err) { console.log(err + "\nファイルが正常に作成されませんでした") }
-            console.log(fileName01 + ' が作成されました');
+            console.log(logDir+fileName01 + ' が作成されました');
         });
     } else {
         fs.writeFile(logDir + fileName02, column, function (err) {

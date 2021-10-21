@@ -37,8 +37,8 @@
 
         // 実験で用いるパラメータ関係
         let convDist = 80; // コンバージェンスを動かす閾値(距離)
-        let DRDist = 2; // DRを動かす閾値(距離)
-        let connectDelay = 1000; // 通信遅延
+        let DRDist = 0; // DRを動かす閾値(距離)
+        let connectDelay = 400; // 通信遅延
 
         let fps = 1000 / 30; // 画面の更新間隔
 
@@ -516,7 +516,8 @@
             ctx.fillStyle = "black";
             ctx.fillText("Debug:" + debug + "\nDebug mode → \"D\"key", 0, 60);
             ctx.fillText("delay : " + delayTime, 0, 80);
-            ctx.fillText("addDelay : " + addDelay + "(" + twoBeforeFrTime + " → " + lastFrTime + ")", 0, 100);
+            //ctx.fillText("addDelay : " + addDelay + "(" + twoBeforeFrTime + " → " + lastFrTime + ")", 0, 100);
+            ctx.fillText("ConnectDelay : " + connectDelay, 0, 100);
 
             if (debug == true) {
                 ctx.fillText("X:" + disMyX + "\tY:" + disMyY, disNowXbrs + 36, disMyY, 70);

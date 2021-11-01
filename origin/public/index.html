@@ -521,17 +521,21 @@
 
             if (debug == true) {
                 ctx.fillText("X:" + disMyX + "\tY:" + disMyY, disNowXbrs + 36, disMyY, 70);
+
                 ctx.fillStyle = "rgba(255,0,200,0.5)";
                 ctx.fillText("X:" + disFrX + "\tY:" + disFrY, nowFrXbrs + 36, disFrY, 70);
+                
                 ctx.fillStyle = "rgba(255,0,0,0.2)";
                 ctx.fillRect(upFrXbrs, updatedFriendY, PW, PH);
+
                 ctx.fillStyle = "rgba(255,0,200,0.5)";
                 ctx.fillText("X:" + updatedFriendX + "\tY:" + updatedFriendY, upFrXbrs + 36, updatedFriendY, 70);
+
                 if (debagDist > 6) {
                     ctx.fillStyle = "black";
                     ctx.beginPath();
-                    ctx.moveTo(upFrXbrs + 16, updatedFriendY + 16);
-                    ctx.lineTo(nowFrXbrs + 16, disFrY + 16);
+                    ctx.moveTo(upFrXbrs + PW / 2 , updatedFriendY + PW / 2 );
+                    ctx.lineTo(nowFrXbrs + PH / 2 , disFrY + PH / 2 );
                     ctx.stroke();
                     ctx.fillText("Dist:" + debagDist, (upFrXbrs + nowFrXbrs) / 2, (disFrY + updatedFriendY) / 2, 70);
                 }

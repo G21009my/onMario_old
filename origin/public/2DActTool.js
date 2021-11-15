@@ -6,9 +6,14 @@
  * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━┛
+ * */
+
+/**━━━━━━━━━━━━━━━━━━━━━━━━━┓
  * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫ 
  * ここに関数の機能
  * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
+
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
  * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫ 
@@ -18,11 +23,16 @@
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
  * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫ 
+ * 接触判定関係の関数
+ * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┫
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━┛*/
+
+/**━━━━━━━━━━━━━━━━━━━━━━━━━┓
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━┛
  * 四角形同士で変更前後のxy座標を受け取り
  * 指定のオブジェクトの上に接触していればそのオブジェクトの情報を
- * 存在していなければnullを返す関数
- * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
- function judgeOnTheSquare(subX, subY, subXup, subYup, subW, subH, tarX, tarY, tarW, tarH) {
+ * 存在していなければnullを返す関数*/
+function judgeOnTheSquare(subX, subY, subXup, subYup, subW, subH, tarX, tarY, tarW, tarH) {
     // (接触側のx,y,次Fのx,y,接触側の高さ,横幅,被接触側のx,y,高さ,横幅)
 
     let subject = { x: subX, y: subY, nextX: subXup, nextY: subYup, w: subW, h: subH };
@@ -62,11 +72,10 @@
 }
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
- * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━┛
  * 四角形同士で変更前後のxy座標を受け取り
  * 指定のオブジェクトの下に接触していればそのオブジェクトの情報を
- * 存在していなければnullを返す関数
- * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
+ * 存在していなければnullを返す関数*/
 function judgeUnderTheSquare(subX, subY, subXup, subYup, subW, subH, tarX, tarY, tarW, tarH) {
     // (接触側のx,y,次Fのx,y,接触側の高さ,横幅,被接触側のx,y,高さ,横幅)
 
@@ -107,11 +116,10 @@ function judgeUnderTheSquare(subX, subY, subXup, subYup, subW, subH, tarX, tarY,
 }
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
- * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━┛
  * 四角形同士で変更前後のxy座標を受け取り
  * 指定のオブジェクトの左に接触していればそのオブジェクトの情報を
- * 存在していなければnullを返す関数
- * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
+ * 存在していなければnullを返す関数*/
 function judgeTouchAtTheLeftSquare(subX, subY, subXup, subYup, subW, subH, tarX, tarY, tarW, tarH) {
     // (接触側のx,y,次Fのx,y,接触側の高さ,横幅,被接触側のx,y,高さ,横幅)
 
@@ -151,11 +159,10 @@ function judgeTouchAtTheLeftSquare(subX, subY, subXup, subYup, subW, subH, tarX,
 }
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
- * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━┛
  * 四角形同士で変更前後のxy座標を受け取り
  * 指定のオブジェクトの右に接触していればそのオブジェクトの情報を
- * 存在していなければnullを返す関数
- * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
+ * 存在していなければnullを返す関数*/
 function judgeTouchAtTheRightSquare(subX, subY, subXup, subYup, subW, subH, tarX, tarY, tarW, tarH) {
     // (接触側のx,y,次Fのx,y,接触側の高さ,横幅,被接触側のx,y,高さ,横幅)
 
@@ -193,52 +200,48 @@ function judgeTouchAtTheRightSquare(subX, subY, subXup, subYup, subW, subH, tarX
 }
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
- * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫ 
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━┛ 
  * 上記4種類の矩形当たり判定を一括で行い
- * それぞれの接触を配列で返す
- * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
-function checkHitRectangle(blockArray,subX, subY, subXup, subYup, subW, subH){
+ * それぞれの接触を配列で返す*/
+function checkHitRectangle(blockArray, subX, subY, subXup, subYup, subW, subH) {
     // (ブロックの要素配列,接触側のx,y,次Fのx,y,接触側の高さ,横幅)
     // blockArrayはx,y,w,hの順で構成された連想配列であることが前提になっています。
-    let hitVector={above:false,under:false,right:false,left:false};
-    let ab=judgeOnTheSquare(subX, subY, subXup, subYup, subW, subH, blockArray.x,blockArray.y,blockArray.w,blockArray.h);
-    let un=judgeUnderTheSquare(subX, subY, subXup, subYup, subW, subH, blockArray.x,blockArray.y,blockArray.w,blockArray.h);
-    let ri=judgeTouchAtTheRightSquare(subX, subY, subXup, subYup, subW, subH, blockArray.x,blockArray.y,blockArray.w,blockArray.h);
-    let le=judgeTouchAtTheLeftSquare(subX, subY, subXup, subYup, subW, subH, blockArray.x,blockArray.y,blockArray.w,blockArray.h);
-    if(ab!=null)hitVector.above=true;
-    if(un!=null)hitVector.under=true;
-    if(ri!=null)hitVector.right=true;
-    if(le!=null)hitVector.left=true;
-    if(ab==null&&un==null&&ri==null&&le==null)return null;
+    let hitVector = { above: false, under: false, right: false, left: false };
+    let ab = judgeOnTheSquare(subX, subY, subXup, subYup, subW, subH, blockArray.x, blockArray.y, blockArray.w, blockArray.h);
+    let un = judgeUnderTheSquare(subX, subY, subXup, subYup, subW, subH, blockArray.x, blockArray.y, blockArray.w, blockArray.h);
+    let ri = judgeTouchAtTheRightSquare(subX, subY, subXup, subYup, subW, subH, blockArray.x, blockArray.y, blockArray.w, blockArray.h);
+    let le = judgeTouchAtTheLeftSquare(subX, subY, subXup, subYup, subW, subH, blockArray.x, blockArray.y, blockArray.w, blockArray.h);
+    if (ab != null) hitVector.above = true;
+    if (un != null) hitVector.under = true;
+    if (ri != null) hitVector.right = true;
+    if (le != null) hitVector.left = true;
+    if (ab == null && un == null && ri == null && le == null) return null;
     return hitVector;
 }
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
- * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫ 
- * 球体の当たり判定
- * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━┛
+ * 球体の当たり判定*/
 function sphereHit() {
     ;
 }
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
- * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫ 
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━┛ 
  * 2Dでの重力処理
- * 下への重力のみ
- * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
-function gravity2D(nowY,acclG){
-    return nowY+acclG;
+ * 下への重力のみ*/
+function gravity2D(nowY, acclG) {
+    return nowY + acclG;
 }
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
- * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫ 
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━┛ 
  * 2Dでの4方向重力処理
  * vctr(0:右方向,1:左方向,2:上方向,3:下方向(通常))
  * acclG:重力加速度(大体0.5くらいが自然カナ)
  * (或いは画面幅の1/100が)
  * 
- * 下に落ちる機能のみ実装済み
- * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
+ * 下に落ちる機能のみ実装済み*/
 function qGravity2D(nowX, nowY, vctr, speedX, speedY, acclG) {
     let nc = { x: nowX, y: nowY };
     if (vctr == 0) { // 右に落ちる
@@ -263,12 +266,113 @@ function qGravity2D(nowX, nowY, vctr, speedX, speedY, acclG) {
 }
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━┛ 
+ * xへの等速移動*/
+function moveX() {
+
+}
+
+/**━━━━━━━━━━━━━━━━━━━━━━━━━┓
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━┛ 
+ * xへの加速ありの移動速度を計算する
+ * 
+ * ・power：加速力
+ * ・nowThrust：現在推力
+ * ・nowSpeed：現在速度
+ * ・maxThrust：最大推力
+ * ・maxSpeed：最大速度
+ * 
+ * -以下なくても可-
+ * ・resistFlag：抵抗(摩擦など)の切り替え
+ *      FALSE = 定数( nowThrust -= resistPower; )
+ *      指定がなければコイツは FALSE で
+ *      後述のresistPowerは 0 で初期化されるので
+ *      nowThrust -= 0;
+ *      となる(抵抗が発生しない)
+ *      単体で完全にストップする挙動ができる（あと楽）
+ * 
+ *      TRUE = 割合( nowThrust -= nowThrust / resistPower; )
+ *      こちらは resistPower を 0 以上で初期化しておかないと多分エラーになるので注意
+ *      あとこれを使うとこの関数単体だと多分完全にストップしない（nowThrust が 0 にならない）かも
+ *      なので割合で減少だけど一定の速度以下は0にするとかの処理はコイツ単体では無理（できるけどやると汎用性を損なう）
+ *      return 値で個別に計算してくれ
+ *      もしかすると浮動小数点のエラーを吐くかもしれないのでそうなったら一定以下は 0 の処理にすると思う
+ * ・resistPower：抵抗の強さ。デフォルトでは 0 で初期化される。マイナスには絶対するな
+ * */
+function xSpeedUp(
+    power,
+    nowThrust,
+    nowSpeed,
+    maxThrust,
+    maxSpeed,
+    nextThrust,
+    nextSpeed,
+    xVector,
+
+    resistFlag = FALSE,
+    resistPower = 0
+) {
+
+    // 現在推力に加速力を加算
+    nowThrust += power;
+
+    if(xVector==TRUE){
+        // 右への現在推力が最大推力を上回る場合に最大推力に矯正する
+        if (maxThrust < nowThrust) nowThrust = maxThrust;
+    }else{
+        // 左への現在推力が最大推力を上回る場合に最大推力に矯正する
+        if (-(maxThrust) > nowThrust) nowThrust = -(maxThrust);
+    }
+
+    // 抵抗力を計算する
+    if (resistFlag == TRUE) {
+
+        // 割合で減算する
+        nowSpeed -=Math.abs(nowSpeed) - Math.abs(nowSpeed) / resistPower;
+
+        if(nowSpeed<0) ;
+
+    } else {
+
+        // 定数で減算する
+        // resistPower が 0 なら抵抗が発生しない
+        nowSpeed -= resistPower;
+    }
+
+    // 現在速度に現在推力を加算
+    nowSpeed += nowThrust;
+
+    // 現在速度が最大速度を上回る場合に最大速度に矯正する
+    if (maxSpeed < nowSpeed) nowSpeed = maxSpeed;
+
+    // nowThrust と nowSpeed をどちらも返したいので配列にブチ込む
+    let thAndSp = { nowThrust: nowThrust, nowSpeed: nowSpeed };
+
+    return thAndSp;
+}
+
+function xAccel(
+    xVector,
+
+    power,
+    nowThrust,
+    nowSpeed,
+    maxThrust,
+    maxSpeed,
+
+    resistFlag = FALSE,
+    resistPower = 0
+){
+    
+}
+
+/**━━━━━━━━━━━━━━━━━━━━━━━━━┓
  * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫ 
  * 2Dでの重力処理
  * 三角関数を使い任意の方向に重力を発生させる
  * 後で作ります
  * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
-function fGravity2D(){
+function fGravity2D() {
     ;
 }
 
@@ -286,13 +390,13 @@ function fGravity2D(){
  * yVectorOtherVertex:同上。
  * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
 function stDRecon(
-     nowArrayMyVertex,
-     xCoordinateOtherVertex,
-     yCoordinateOtherVertex,
-     xVectorOtherVertex,
-     yVectorOtherVertex,
-     delayLoopOtherVertex
-     ) {
+    nowArrayMyVertex,
+    xCoordinateOtherVertex,
+    yCoordinateOtherVertex,
+    xVectorOtherVertex,
+    yVectorOtherVertex,
+    delayLoopOtherVertex
+) {
     nowArrayMyVertex.x = xCoordinateOtherVertex + xVectorOtherVertex * delayLoopOtherVertex
     nowArrayMyVertex.y = yCoordinateOtherVertex + yVectorOtherVertex * delayLoopOtherVertex;
     console.log(nowArrayMyVertex.x);
@@ -314,7 +418,7 @@ function dRecon(
     nowArrayMyVertex,
     locateArrayOtherVertex,
     delayArrayOtherVertex
-){
+) {
     // cubic spline を実装する
     // 全然わからーーーーーん
 }

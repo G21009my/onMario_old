@@ -274,7 +274,7 @@ function moveX() {
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
  * ━━━━━━━━━━━━━━━━━━━━━━━━━┛ 
- * xへの加速ありの移動速度を計算する
+ * 右方向、或いは真下方向（正の値）への加速ありの移動速度を計算する
  * 
  * ・power：加速力
  * ・nowThrust：現在推力
@@ -297,47 +297,37 @@ function moveX() {
  *      なので割合で減少だけど一定の速度以下は0にするとかの処理はコイツ単体では無理（できるけどやると汎用性を損なう）
  *      return 値で個別に計算してくれ
  *      もしかすると浮動小数点のエラーを吐くかもしれないのでそうなったら一定以下は 0 の処理にすると思う
- * ・resistPower：抵抗の強さ。デフォルトでは 0 で初期化される。マイナスには絶対するな
- * */
-function xSpeedUp(
+ * ・resistPower：抵抗の強さ。デフォルトでは 0 で初期化される。マイナスには絶対するな */
+function posiSpeedUp(
     power,
     nowThrust,
     nowSpeed,
     maxThrust,
     maxSpeed,
-    nextThrust,
-    nextSpeed,
-    xVector,
 
     resistFlag = FALSE,
     resistPower = 0
 ) {
+    // 抵抗力がマイナスになられるとマズいのでマイナスなら0に矯正する
+    if (resistPower < 0) resistPower = 0;
+
+    // 抵抗力を計算する
+    if (resistFlag == TRUE) { // 割合で減算する場合
+        nowSpeed -= nowSpeed - nowSpeed / resistPower;
+
+    } else { // 固定値で減算する場合
+        // 現在速度から抵抗力分の速度を減算する
+        // resistPower が 0 なら抵抗が発生しない
+        nowSpeed -= resistPower;
+    }
+    // 抵抗によって速度がマイナスになるのはあり得ないのでマイナスになる場合は0に矯正する
+    if (nowSpeed < 0) nowSpeed = 0;
 
     // 現在推力に加速力を加算
     nowThrust += power;
 
-    if(xVector==TRUE){
-        // 右への現在推力が最大推力を上回る場合に最大推力に矯正する
-        if (maxThrust < nowThrust) nowThrust = maxThrust;
-    }else{
-        // 左への現在推力が最大推力を上回る場合に最大推力に矯正する
-        if (-(maxThrust) > nowThrust) nowThrust = -(maxThrust);
-    }
-
-    // 抵抗力を計算する
-    if (resistFlag == TRUE) {
-
-        // 割合で減算する
-        nowSpeed -=Math.abs(nowSpeed) - Math.abs(nowSpeed) / resistPower;
-
-        if(nowSpeed<0) ;
-
-    } else {
-
-        // 定数で減算する
-        // resistPower が 0 なら抵抗が発生しない
-        nowSpeed -= resistPower;
-    }
+    // 現在推力が最大推力を上回る場合に最大推力に矯正する
+    if (maxThrust < nowThrust) nowThrust = maxThrust;
 
     // 現在速度に現在推力を加算
     nowSpeed += nowThrust;
@@ -351,6 +341,76 @@ function xSpeedUp(
     return thAndSp;
 }
 
+/**━━━━━━━━━━━━━━━━━━━━━━━━━┓
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━┛ 
+ * 左方向、或いは真上方向への加速ありの移動速度を計算する
+ * 
+ * ・power：加速力
+ * ・nowThrust：現在推力
+ * ・nowSpeed：現在速度
+ * ・maxThrust：最大推力
+ * ・maxSpeed：最大速度
+ * 
+ * -以下なくても可-
+ * ・resistFlag：抵抗(摩擦など)の切り替え
+ *      FALSE = 定数( nowThrust -= resistPower; )
+ *      指定がなければコイツは FALSE で
+ *      後述のresistPowerは 0 で初期化されるので
+ *      nowThrust -= 0;
+ *      となる(抵抗が発生しない)
+ *      単体で完全にストップする挙動ができる（あと楽）
+ * 
+ *      TRUE = 割合( nowThrust -= nowThrust / resistPower; )
+ *      こちらは resistPower を 0 以上で初期化しておかないと多分エラーになるので注意
+ *      あとこれを使うとこの関数単体だと多分完全にストップしない（nowThrust が 0 にならない）かも
+ *      なので割合で減少だけど一定の速度以下は0にするとかの処理はコイツ単体では無理（できるけどやると汎用性を損なう）
+ *      return 値で個別に計算してくれ
+ *      もしかすると浮動小数点のエラーを吐くかもしれないのでそうなったら一定以下は 0 の処理にすると思う
+ * ・resistPower：抵抗の強さ。デフォルトでは 0 で初期化される。マイナスには絶対するな */
+function negaSpeedUp(
+    power,
+    nowThrust,
+    nowSpeed,
+    maxThrust,
+    maxSpeed,
+
+    resistFlag = FALSE,
+    resistPower = 0
+) {
+    // 抵抗力がマイナスになられるとマズいのでマイナスなら0に矯正する
+    if (resistPower < 0) resistPower = 0;
+
+    // 抵抗力を計算する
+    if (resistFlag == TRUE) { // 割合で加算する場合
+        nowSpeed += nowSpeed - nowSpeed / resistPower;
+
+    } else { // 固定値で加算する場合
+        // 現在速度から抵抗力分の速度を加算する
+        // resistPower が 0 なら抵抗が発生しない
+        nowSpeed += resistPower;
+    }
+    // 抵抗によって速度が0を跨ぐのはあり得ないのでプラスになる場合は0に矯正する
+    if (nowSpeed > 0) nowSpeed = 0;
+
+    // 現在推力に加速力を減算
+    nowThrust -= power;
+
+    // 現在推力が左への最大推力を上回る場合に最大推力に矯正する
+    if (-(maxThrust) > nowThrust) nowThrust = -(maxThrust);
+
+    // 現在速度に現在推力を減算
+    nowSpeed -= nowThrust;
+
+    // 現在速度が最大速度を上回る場合に最大速度に矯正する
+    if ( -(maxSpeed) > nowSpeed) nowSpeed = -(maxSpeed);
+
+    // nowThrust と nowSpeed をどちらも返したいので配列にブチ込む
+    let thAndSp = { nowThrust: nowThrust, nowSpeed: nowSpeed };
+
+    return thAndSp;
+
+}
+
 function xAccel(
     xVector,
 
@@ -362,8 +422,8 @@ function xAccel(
 
     resistFlag = FALSE,
     resistPower = 0
-){
-    
+) {
+
 }
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓

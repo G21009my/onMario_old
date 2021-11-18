@@ -305,23 +305,26 @@ function posiSpeedUp(
     maxThrust,
     maxSpeed,
 
-    resistFlag = FALSE,
+    resistFlag = 0,
     resistPower = 0
 ) {
     // 抵抗力がマイナスになられるとマズいのでマイナスなら0に矯正する
     if (resistPower < 0) resistPower = 0;
 
     // 抵抗力を計算する
-    if (resistFlag == TRUE) { // 割合で減算する場合
-        nowSpeed -= nowSpeed - nowSpeed / resistPower;
+    if (nowSpeed > 0) {
+        if (resistFlag != 0) { // 割合で減算する場合
+            nowSpeed -= nowSpeed - nowSpeed / resistPower;
 
-    } else { // 固定値で減算する場合
-        // 現在速度から抵抗力分の速度を減算する
-        // resistPower が 0 なら抵抗が発生しない
-        nowSpeed -= resistPower;
+        } else { // 固定値で減算する場合
+            // 現在速度から抵抗力分の速度を減算する
+            // resistPower が 0 なら抵抗が発生しない
+            nowSpeed -= resistPower;
+        }
+        // 抵抗によって速度がマイナスになるのはあり得ないのでマイナスになる場合は0に矯正する
+        if (nowSpeed < 0) nowSpeed = 0;
     }
-    // 抵抗によって速度がマイナスになるのはあり得ないのでマイナスになる場合は0に矯正する
-    if (nowSpeed < 0) nowSpeed = 0;
+
 
     // 現在推力に加速力を加算
     nowThrust += power;
@@ -374,23 +377,26 @@ function negaSpeedUp(
     maxThrust,
     maxSpeed,
 
-    resistFlag = FALSE,
+    resistFlag = 0,
     resistPower = 0
 ) {
     // 抵抗力がマイナスになられるとマズいのでマイナスなら0に矯正する
     if (resistPower < 0) resistPower = 0;
 
     // 抵抗力を計算する
-    if (resistFlag == TRUE) { // 割合で加算する場合
-        nowSpeed += nowSpeed - nowSpeed / resistPower;
+    if (nowSpeed < 0) {
+        if (resistFlag != 0) { // 割合で加算する場合
+            nowSpeed += nowSpeed - nowSpeed / resistPower;
 
-    } else { // 固定値で加算する場合
-        // 現在速度から抵抗力分の速度を加算する
-        // resistPower が 0 なら抵抗が発生しない
-        nowSpeed += resistPower;
+        } else { // 固定値で加算する場合
+            // 現在速度から抵抗力分の速度を加算する
+            // resistPower が 0 なら抵抗が発生しない
+            nowSpeed += resistPower;
+        }
+        // 抵抗によって速度が0を跨ぐのはあり得ないのでプラスになる場合は0に矯正する
+        if (nowSpeed > 0) nowSpeed = 0;
     }
-    // 抵抗によって速度が0を跨ぐのはあり得ないのでプラスになる場合は0に矯正する
-    if (nowSpeed > 0) nowSpeed = 0;
+    
 
     // 現在推力に加速力を減算
     nowThrust -= power;
@@ -399,7 +405,7 @@ function negaSpeedUp(
     if (-(maxThrust) > nowThrust) nowThrust = -(maxThrust);
 
     // 現在速度に現在推力を減算
-    nowSpeed -= nowThrust;
+    nowSpeed += nowThrust;
 
     // 現在速度が最大速度を上回る場合に最大速度に矯正する
     if ( -(maxSpeed) > nowSpeed) nowSpeed = -(maxSpeed);

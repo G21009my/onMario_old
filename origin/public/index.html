@@ -36,7 +36,7 @@
         let roomNo = 0;
 
         // 実験で用いるパラメータ関係
-        let convDist = 80; // コンバージェンスを動かす閾値(距離)
+        let convDist = 8000; // コンバージェンスを動かす閾値(距離)
         let DRDist = 0; // DRを動かす閾値(距離)
         let connectDelay = 400; // 通信遅延
 
@@ -115,6 +115,17 @@
 
         // 画面スクロール用の変数
         var scrollX = 0;
+
+        // thrust関係
+        const power = 0.5;
+        const maxThrust = 4;
+        const maxSpeed = 11;
+
+        let nowThrust = 0;
+        let nowSpeed = 0;
+
+        const resistPower = 0.3;
+        const resistFlag = 0;
 
         // 左右への速度
         let vx = 4;
@@ -218,7 +229,7 @@
 
             //console.log("send");
             if (pnum == 1) {
-                
+
                 socket.emit("sendOneFromCli", nowX1, nowY1, myVecX, myVecY, timeSt, updatedFriendX, updatedFriendY, convON);
             } else if (pnum == 2) {
                 socket.emit("sendTwoFromCli", nowX2, nowY2, myVecX, myVecY, timeSt, updatedFriendX, updatedFriendY, convON);
@@ -294,12 +305,12 @@
             return gotNowMyTime;
         }
 
-        function leftMv(x,xSpeed) {
+        function leftMv(x, xSpeed) {
             x = x - xSpeed;
             return x;
         }
 
-        function rightMv(x,xSpeed) {
+        function rightMv(x, xSpeed) {
             x = x + xSpeed;
             return x;
         }
@@ -368,7 +379,7 @@
                 console.log("vecX:" + inPVecX + "\nvecY:" + inPVecY);
                 console.log("muVec:" + myVecX + " " + myVecY);
                 console.log("dis:" + dist + " interM ignite")
-                upFrArray = interMo(upFrArray, updatedFriendX, updatedFriendY, 4);
+                upFrArray = interMo(upFrArray, updatedFriendX, updatedFriendY, maxSpeed);
                 console.log("┷┷┷┷");
             } else if (dist >= DRDist && dist < convDist/*&&inPVecX!=0&&inPVecY!=0*/) {
                 convON = false;
@@ -526,7 +537,7 @@
 
                 ctx.fillStyle = "rgba(255,0,200,0.5)";
                 ctx.fillText("X:" + disFrX + "\tY:" + disFrY, nowFrXbrs + 36, disFrY, 70);
-                
+
                 ctx.fillStyle = "rgba(255,0,0,0.2)";
                 ctx.fillRect(upFrXbrs, updatedFriendY, PW, PH);
 
@@ -536,8 +547,8 @@
                 if (debagDist > 6) {
                     ctx.fillStyle = "black";
                     ctx.beginPath();
-                    ctx.moveTo(upFrXbrs + PW / 2 , updatedFriendY + PW / 2 );
-                    ctx.lineTo(nowFrXbrs + PH / 2 , disFrY + PH / 2 );
+                    ctx.moveTo(upFrXbrs + PW / 2, updatedFriendY + PW / 2);
+                    ctx.lineTo(nowFrXbrs + PH / 2, disFrY + PH / 2);
                     ctx.stroke();
                     ctx.fillText("Dist:" + debagDist, (upFrXbrs + nowFrXbrs) / 2, (disFrY + updatedFriendY) / 2, 70);
                 }
@@ -600,13 +611,7 @@
                 }
             } else {
                 // 入力値の確認と反映
-                if (input_key_buffer[37]) {
-                    if (pnum == 1) {
-                        updatedMyX = leftMv(nowX1,vx);
-                    } else if (pnum == 2) {
-                        updatedMyX = leftMv(nowX2,vx);
-                    }
-                }
+
                 if (input_key_buffer[38]) {
                     if (isJump == false) {
                         vy = -12;
@@ -617,13 +622,42 @@
                         ;
                     }
                 }
-                if (input_key_buffer[39]) {
+
+                if (input_key_buffer[37] != true && input_key_buffer[39] != true) {
+                    nowThrust = xThrustUp(0, nowThrust, maxThrust, resistPower);
+                    nowSpeed = xSpeedUp(nowThrust, nowSpeed, maxSpeed, resistPower);
+
                     if (pnum == 1) {
-                        updatedMyX = rightMv(nowX1,vx);
-                    } else {
-                        updatedMyX = rightMv(nowX2,vx);
+                        updatedMyX += nowSpeed;
+                    } else if (pnum == 2) {
+                        updatedMyX += nowSpeed;
+                    }
+                } else {
+                    if (input_key_buffer[37]) {
+
+                        nowThrust = xThrustUp(-(power), nowThrust, maxThrust, resistPower);
+                        nowSpeed = xSpeedUp(nowThrust, nowSpeed, maxSpeed, resistPower);
+
+                        if (pnum == 1) {
+                            updatedMyX += nowSpeed;
+                        } else if (pnum == 2) {
+                            updatedMyX += nowSpeed;
+                        }
+                    }
+
+                    if (input_key_buffer[39]) {
+
+                        nowThrust = xThrustUp(power, nowThrust, maxThrust, resistPower);
+                        nowSpeed = xSpeedUp(nowThrust, nowSpeed, maxSpeed, resistPower);
+
+                        if (pnum == 1) {
+                            updatedMyX += nowSpeed;
+                        } else if (pnum == 2) {
+                            updatedMyX += nowSpeed;
+                        }
                     }
                 }
+
 
                 if (input_key_buffer[68]) {// デバッグモードの切り替え
                     if (debug == false) {

@@ -188,10 +188,9 @@ io.sockets.on("connection", function (socket) {
 
         drX02 = sendFrX;
         drY02 = sendFrY;
-
-        writeCSV(nowX1, nowY1, drX02, drY02, sendConOn, fileName01, time1);
-
+        
         io.sockets.emit("infoPosForOne", nowX2, nowY2, vecX2, vecY2, time2);
+        writeCSV(nowX1, nowY1, drX02, drY02, sendConOn, fileName01, time1);
     });
     //
     socket.on("sendTwoFromCli", function (sendx, sendy, sendVecX, sendVecY, sendt, sendFrX, sendFrY, sendConOn) {
@@ -204,10 +203,9 @@ io.sockets.on("connection", function (socket) {
 
         drX01 = sendFrX;
         drY01 = sendFrY;
-
-        writeCSV(nowX2, nowY2, drX01, drY01, sendConOn, fileName02, time2);
-
+        
         io.sockets.emit("infoPosForTwo", nowX1, nowY1, vecX1, vecY1, time1);
+        writeCSV(nowX2, nowY2, drX01, drY01, sendConOn, fileName02, time2);
     });
 
     socket.on("lisPosFromOne", function () {

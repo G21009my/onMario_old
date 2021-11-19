@@ -292,7 +292,6 @@ function xThrustUp(
          * 正の値の推力なら抵抗力の分だけ現在推力を減算
          * 負の値なら加算となる
          * とりあえず0に近づくと考えれば良い */
-         console.log(nowThrust+" -= "+resistPower+" * "+(nowThrust^0));
         nowThrust -= resistPower * (Math.sign(nowThrust) ^ 0);
     }
 

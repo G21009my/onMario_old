@@ -116,6 +116,8 @@
         // 画面スクロール用の変数
         var scrollX = 0;
 
+        // 左右への速度
+        let vx = 4;
         // 上下方向の速度
         var vy = 0;
         // 重力加速度
@@ -292,13 +294,13 @@
             return gotNowMyTime;
         }
 
-        function leftMv(x) {
-            x = x - 4;
+        function leftMv(x,xSpeed) {
+            x = x - xSpeed;
             return x;
         }
 
-        function rightMv(x) {
-            x = x + 4;
+        function rightMv(x,xSpeed) {
+            x = x + xSpeed;
             return x;
         }
 
@@ -600,9 +602,9 @@
                 // 入力値の確認と反映
                 if (input_key_buffer[37]) {
                     if (pnum == 1) {
-                        updatedMyX = leftMv(nowX1);
+                        updatedMyX = leftMv(nowX1,vx);
                     } else if (pnum == 2) {
-                        updatedMyX = leftMv(nowX2);
+                        updatedMyX = leftMv(nowX2,vx);
                     }
                 }
                 if (input_key_buffer[38]) {
@@ -617,9 +619,9 @@
                 }
                 if (input_key_buffer[39]) {
                     if (pnum == 1) {
-                        updatedMyX = rightMv(nowX1);
+                        updatedMyX = rightMv(nowX1,vx);
                     } else {
-                        updatedMyX = rightMv(nowX2);
+                        updatedMyX = rightMv(nowX2,vx);
                     }
                 }
 

@@ -272,6 +272,68 @@ function moveX() {
 
 }
 
+function xThrustUp(
+    power,
+    nowThrust,
+    maxThrust,
+
+    resistPower = 0
+) {
+    // 抵抗力がマイナスになられるとマズいのでマイナスなら0に矯正する
+    if (resistPower < 0) resistPower = 0;
+
+    // 抵抗力の分だけ推力を0に近づける
+    // |nowThrust| - resistPower … nowThrustが0を跨がないかを判定
+    if ((Math.abs(nowThrust) - resistPower) < 0) {
+        nowThrust = 0;
+    } else {
+        /**抵抗力に現在推力の符号を掛けた値を減算する
+         * （Math.signすると符号だけが残るのでそれを掛けている）
+         * 正の値の推力なら抵抗力の分だけ現在推力を減算
+         * 負の値なら加算となる
+         * とりあえず0に近づくと考えれば良い */
+         console.log(nowThrust+" -= "+resistPower+" * "+(nowThrust^0));
+        nowThrust -= resistPower * (Math.sign(nowThrust) ^ 0);
+    }
+
+    // 現在推力が最大推力を上回る場合に最大推力に矯正する
+    if (Math.abs(nowThrust + power) > maxThrust) {
+        nowThrust = maxThrust * (Math.sign(nowThrust + power)^ 0);
+    } else {
+        // 現在推力に加速力を加算
+        nowThrust += power;
+    }
+
+    return nowThrust;
+}
+
+function xSpeedUp(
+    nowThrust,
+    nowSpeed,
+    maxSpeed,
+
+    resistPower = 0
+) {
+    // 抵抗力の分だけ速度を0に近づける
+    if ((Math.abs(nowSpeed) - resistPower) < 0) {
+        nowSpeed = 0;
+    } else {
+        /**抵抗力に現在推力の符号を掛けた値を減算する
+         * 内容は上でやってる推力の計算と同じなので詳しくはそちらを参照 */
+        nowSpeed -= resistPower * (Math.sign(nowSpeed) ^ 0);
+    }
+
+    // 現在速度が最大速度を上回る場合に最大速度に矯正する
+    if (Math.abs(nowSpeed + nowThrust) > maxSpeed) {
+        nowSpeed = maxSpeed * (Math.sign((nowSpeed + nowThrust)) ^ 0);
+    } else {
+        // 現在速度に現在推力を加算
+        nowSpeed += nowThrust;
+    }
+
+    return nowSpeed;
+}
+
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
  * ━━━━━━━━━━━━━━━━━━━━━━━━━┛ 
  * 右方向、或いは真下方向（正の値）への加速ありの移動速度を計算する
@@ -396,7 +458,7 @@ function negaSpeedUp(
         // 抵抗によって速度が0を跨ぐのはあり得ないのでプラスになる場合は0に矯正する
         if (nowSpeed > 0) nowSpeed = 0;
     }
-    
+
 
     // 現在推力に加速力を減算
     nowThrust -= power;
@@ -408,7 +470,7 @@ function negaSpeedUp(
     nowSpeed += nowThrust;
 
     // 現在速度が最大速度を上回る場合に最大速度に矯正する
-    if ( -(maxSpeed) > nowSpeed) nowSpeed = -(maxSpeed);
+    if (-(maxSpeed) > nowSpeed) nowSpeed = -(maxSpeed);
 
     // nowThrust と nowSpeed をどちらも返したいので配列にブチ込む
     let thAndSp = { nowThrust: nowThrust, nowSpeed: nowSpeed };

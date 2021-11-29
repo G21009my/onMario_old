@@ -38,9 +38,11 @@
         // 実験で用いるパラメータ関係
         let convDist = 8000; // コンバージェンスを動かす閾値(距離)
         let DRDist = 0; // DRを動かす閾値(距離)
-        let connectDelay = 400; // 通信遅延
+        let connectDelay = 300; // 通信遅延
 
-        let fps = 1000 / 30; // 画面の更新間隔
+        const oSec = 1000;
+        const fps_d = 30;
+        let fps = oSec / fps_d; // 画面の更新間隔
 
         //1Pの座標
         let nowX1 = 0;
@@ -105,6 +107,9 @@
             input_key_buffer[e.keyCode] = false;
         }
 
+        input_key_buffer[37] = false;
+        input_key_buffer[39] = false;
+
         // canvas要素の取得
         const canvas = document.getElementById("view");
         const ctx = canvas.getContext("2d");
@@ -117,22 +122,28 @@
         var scrollX = 0;
 
         // thrust関係
-        const power = 0.5;
-        const maxThrust = 4;
-        const maxSpeed = 11;
+        const power = 0.7;
+        const maxThrust = 5;
+        const maxSpeed = 18;
 
         let nowThrust = 0;
         let nowSpeed = 0;
 
-        const resistPower = 0.3;
+        const resistPower = 0.5;
         const resistFlag = 0;
+
+        // 遅延0のやつ
+        let fastInterFrX = 0;
+        let fastInterFrY = 0;
 
         // 左右への速度
         let vx = 4;
         // 上下方向の速度
         var vy = 0;
+        // ジャンプ力の強さ
+        let jPower = 360 / fps_d;
         // 重力加速度
-        let grv = 0.5;
+        let grv = 15 / fps_d;
         // ジャンプしたか否かのフラグ値
         var isJump = false;
 
@@ -149,7 +160,7 @@
             //{ x: 300, y: 132, w: 730, h: 32, g: 0 },
             { x: 150, y: 150, w: 100, h: 32, g: 0 },
             { x: 350, y: 150, w: 680, h: 32, g: 0 },
-            { x: 200, y: 420, w: 100, h: 32, g: 1 }
+            { x: 200, y: 420, w: 700, h: 32, g: 0 }
         ];
 
         var blocks = JSON.parse(JSON.stringify(orgBlocks));
@@ -252,6 +263,18 @@
             }
         }
 
+        function fastLis() {
+            if (pnum == 1) {
+                //console.log("lisPos1");
+                socket.emit("fastLisFromOne", nowX1, nowY1);
+            } else if (pnum == 2) {
+                //console.log("lisPos2");
+                socket.emit("fastLisFromTwo", nowX2, nowY2);
+            } else {
+                ;
+            }
+        }
+
         socket.on("infoPosForOne", function (svX, svY, svVecX, svVecY, svT) {
             // 後でプレイヤーで発火を限定する予定
             if (pnum == 1) {
@@ -283,6 +306,16 @@
                 addDelay = timeSt - svT;
             }
 
+        });
+
+        socket.on("fastInfoForOne", function (fNowX, fNowY) {
+            fastInterFrX = fNowX;
+            fastInterFrY = fNowY;
+        });
+
+        socket.on("fastInfoForTwo", function (fNowX, fNowY) {
+            fastInterFrX = fNowX;
+            fastInterFrY = fNowY;
         });
 
         function getTimeFoundation() {
@@ -350,6 +383,26 @@
             }
             // 最後までブロック要素を返さなかった場合はブロック要素の上にいないということなのでnullを返却する
             return null;
+        }
+
+        function frInter() {
+            fastLis();
+            if (pnum == 1) {
+                let updatedFriendCoor = interP(nowX2, nowY2, updatedFriendX, updatedFriendY, friendVecX, friendvecY);
+                nowX2 = updatedFriendCoor.x;
+                nowY2 = updatedFriendCoor.y;
+            } else if (pnum == 2) {
+                let updatedFriendCoor = interP(nowX1, nowY1, updatedFriendX, updatedFriendY, friendVecX, friendvecY);
+                nowX1 = updatedFriendCoor.x;
+                nowY1 = updatedFriendCoor.y;
+            } else {
+                ;
+            }
+            if (debug == true) {
+                ctx.fillStyle = "rgba(255,0,255,0.2)";
+                ctx.fillRect(fastInterFrX, fastInterFrY, PW, PH);
+            }
+
         }
 
         /**
@@ -538,8 +591,8 @@
                 ctx.fillStyle = "rgba(255,0,200,0.5)";
                 ctx.fillText("X:" + disFrX + "\tY:" + disFrY, nowFrXbrs + 36, disFrY, 70);
 
-                ctx.fillStyle = "rgba(255,0,0,0.2)";
-                ctx.fillRect(upFrXbrs, updatedFriendY, PW, PH);
+                ctx.fillStyle = "rgba(255,0,0,0.4)";
+                ctx.fillRect(upFrXbrs + PW / 4, updatedFriendY + PH / 4, PW / 2, PH / 2);
 
                 ctx.fillStyle = "rgba(255,0,200,0.5)";
                 ctx.fillText("X:" + updatedFriendX + "\tY:" + updatedFriendY, upFrXbrs + 36, updatedFriendY, 70);
@@ -623,7 +676,8 @@
                     }
                 }
 
-                if (input_key_buffer[37] != true && input_key_buffer[39] != true) {
+                if (input_key_buffer[37] === input_key_buffer[39]) {
+
                     nowThrust = xThrustUp(0, nowThrust, maxThrust, resistPower);
                     nowSpeed = xSpeedUp(nowThrust, nowSpeed, maxSpeed, resistPower);
 
@@ -632,6 +686,7 @@
                     } else if (pnum == 2) {
                         updatedMyX += nowSpeed;
                     }
+
                 } else {
                     if (input_key_buffer[37]) {
 
@@ -729,10 +784,6 @@
                 nowX1 = updatedMyX;
                 nowY1 = updatedMyY;
 
-                let updatedFriendCoor = interP(nowX2, nowY2, updatedFriendX, updatedFriendY, friendVecX, friendvecY);
-                nowX2 = updatedFriendCoor.x;
-                nowY2 = updatedFriendCoor.y;
-
                 displayExis(nowX1, nowY1, nowX2, nowY2, pnum);
             } else {
                 myVecX = updatedMyX - nowX2;
@@ -740,15 +791,12 @@
                 nowX2 = updatedMyX;
                 nowY2 = updatedMyY;
 
-                let updatedFriendCoor = interP(nowX1, nowY1, updatedFriendX, updatedFriendY, friendVecX, friendvecY);
-                nowX1 = updatedFriendCoor.x;
-                nowY1 = updatedFriendCoor.y;
-
                 displayExis(nowX2, nowY2, nowX1, nowY1, pnum);
             }
         }
 
         setInterval(main, fps);
+        setInterval(frInter, fps);
         setInterval(sendForSvr, connectDelay);
 
         /**

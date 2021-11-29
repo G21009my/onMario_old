@@ -6,7 +6,7 @@ app.use("/", express.static(__dirname + "/public"));//このディレクトリ�
 server.listen(8080);
 
 //console.log(sv);
-let logDir=__dirname+"\\log\\"; // ログファイルのディレクトリ
+let logDir = __dirname + "\\log\\"; // ログファイルのディレクトリ
 console.log(logDir);
 
 let roomstr = new Array(16);
@@ -96,7 +96,7 @@ function createCSV(N) {
     if (N == 1) {
         fs.writeFile(logDir + fileName01, column, function (err) {
             if (err) { console.log(err + "\nファイルが正常に作成されませんでした") }
-            console.log(logDir+fileName01 + ' が作成されました');
+            console.log(logDir + fileName01 + ' が作成されました');
         });
     } else {
         fs.writeFile(logDir + fileName02, column, function (err) {
@@ -112,7 +112,7 @@ function writeCSV(x, y, drX, drY, conOn, filename, myTime) {
 
     let writeDelay = timeSt - myTime;
     const data = [
-        { time: timeSt, x: x, y: y, drX: drX, drY: drY, conOn: conOn, delayTime: writeDelay}
+        { time: timeSt, x: x, y: y, drX: drX, drY: drY, conOn: conOn, delayTime: writeDelay }
     ];
 
     // 準備
@@ -141,10 +141,10 @@ io.sockets.on("connection", function (socket) {
         console.log("\"login\" is ignite from cliant." + pNum);
         // プレイヤー番号の割り振り
         if (pNum == 1) {
-            createCSV(1);
+            //createCSV(1);
             pOne = true;
         } else if (pNum == 2) {
-            createCSV(2);
+            //createCSV(2);
             pTwo = true;
         } else {
             ;
@@ -188,9 +188,9 @@ io.sockets.on("connection", function (socket) {
 
         drX02 = sendFrX;
         drY02 = sendFrY;
-        
+
         io.sockets.emit("infoPosForOne", nowX2, nowY2, vecX2, vecY2, time2);
-        writeCSV(nowX1, nowY1, drX02, drY02, sendConOn, fileName01, time1);
+        //writeCSV(nowX1, nowY1, drX02, drY02, sendConOn, fileName01, time1);
     });
     //
     socket.on("sendTwoFromCli", function (sendx, sendy, sendVecX, sendVecY, sendt, sendFrX, sendFrY, sendConOn) {
@@ -203,9 +203,9 @@ io.sockets.on("connection", function (socket) {
 
         drX01 = sendFrX;
         drY01 = sendFrY;
-        
+
         io.sockets.emit("infoPosForTwo", nowX1, nowY1, vecX1, vecY1, time1);
-        writeCSV(nowX2, nowY2, drX01, drY01, sendConOn, fileName02, time2);
+        //writeCSV(nowX2, nowY2, drX01, drY01, sendConOn, fileName02, time2);
     });
 
     socket.on("lisPosFromOne", function () {
@@ -220,6 +220,15 @@ io.sockets.on("connection", function (socket) {
         io.sockets.emit("infoPosForTwo", nowX1, nowY1, vecX1, vecY1, time1);
         console.log("Coor is...\nX1:" + nowX1 + " Y1:" + nowY1);
         console.log("Vec is...\nX1:" + vecX1 + " Y1:" + vecY1);
+    });
+
+    // 遅延0の座標を見せる用のやつ。ローカル環境でしか使わない
+    socket.on("fastLisFromOne", function (fNowX1, fNowY1) {
+        io.sockets.emit("fastInfoForTwo", fNowX1, fNowY1);
+    });
+
+    socket.on("fastLisFromTwo", function (fNowX2, fNowY2) {
+        io.sockets.emit("fastInfoForOne", fNowX2, fNowY2);
     });
 
     socket.on("GameOverFromOne", function () {

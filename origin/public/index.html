@@ -35,24 +35,27 @@
 
         let roomNo = 0;
 
+        // 何回目のスタートか（死ぬと増える）
+        let round = 0;
+
         // 実験で用いるパラメータ関係
         let convDist = 8000; // コンバージェンスを動かす閾値(距離)
         let DRDist = 0; // DRを動かす閾値(距離)
-        let connectDelay = 300; // 通信遅延
+        let connectDelay = 200; // 通信遅延
 
         const oSec = 1000;
         const fps_d = 30;
         let fps = oSec / fps_d; // 画面の更新間隔
 
         //1Pの座標
-        let nowX1 = 0;
+        let nowX1 = 40;
         let nowY1 = 0;
 
         let lisX1 = 0;
         let lisY1 = 0;
 
         //2Pの座標
-        let nowX2 = 40;
+        let nowX2 = 90;
         let nowY2 = 0;
 
         let lisX2 = 0;
@@ -70,6 +73,12 @@
 
         let updatedFriendX = 0;
         let updatedFriendY = 0;
+
+        let arrMyX = Array.from({ length: 10 }, () => 0);
+        let arrMyY = Array.from({ length: 10 }, () => 0);
+
+        let arrFrX = Array.from({ length: 10 }, () => 0);
+        let arrFrY = Array.from({ length: 10 }, () => 0);
 
         let myVecX = 0;
         let myVecY = 0;
@@ -188,9 +197,10 @@
             if (P2f == true && p1 == true) p2 = true;
 
             if (p1 == true && p2 == true) {
-                socket.emit("closeLoginFromCli");
+                setTimeout(socket.emit("closeLoginFromCli"),300);
             } else {
                 setTimeout(function () {
+
                     socket.emit("checkLoginFromCli");
                 }, 600);
             }
@@ -287,10 +297,6 @@
                 getTimeFoundation();
                 addDelay = timeSt - svT;
             }
-            /**
-             * 
-            */
-
         });
 
         socket.on("infoPosForTwo", function (svX, svY, svVecX, svVecY, svT) {
@@ -670,7 +676,7 @@
                         vy = -12;
                         isJump = true;
                     } else if (isJump == true && vy >= 0) {
-                        vy = 0;
+                        //vy = 0;
                     } else {
                         ;
                     }

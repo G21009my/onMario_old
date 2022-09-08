@@ -1,6 +1,8 @@
-var express = require("express"), app = express(), http = require("http"), server = http.createServer(app),
-
-    io = require("socket.io").listen(server);
+const express = require("express");
+const app = express();
+const http = require("http");
+const server = http.createServer(app);
+const io = require("socket.io").listen(server);
 
 app.use("/", express.static(__dirname + "/public"));//このディレクトリの奴を使用可的な
 server.listen(8080);
@@ -31,6 +33,12 @@ let fileName02;
 
 const fs = require('fs');
 
+// 各個体の初期座標
+const defaultX1 = 40;
+const defaultX2 = 90;
+const defaultY1 = 200;
+const defaultY2 = 200;
+
 //1Pの座標
 let nowX1 = 0;
 let nowY1 = 0;
@@ -54,6 +62,11 @@ let vecY2 = 0;
 // 2PがDRで予測した1Pの座標
 let drX01 = 0;
 let drY01 = 0;
+
+let arrayX1 =[...Array(10)].map(() => defaultX1);
+let arrayX2 =[...Array(10)].map(() => defaultX2);
+let arrayY1 =[...Array(10)].map(() => defaultY1);
+let arrayY2 =[...Array(10)].map(() => defaultY2);
 
 let time2 = 0;
 
@@ -86,12 +99,17 @@ function getTimeLocal() { // timeStをローカルで更新(ntpとかで聞い�
     return gotNowMyTime;
 }
 
+function getShortTimeLocal(){
+    
+}
+
 // ログファイルの生成
 function createCSV(N) {
-    console.log("aaaaaaa")
+    console.log("aaaaaaa");
     getTimeFoundation();
-    fileName01 = "logFile01P_" + timeSt + ".csv";
-    fileName02 = "logFile02P_" + timeSt + ".csv";
+    const startTime=timeSt;
+    fileName01 = "logFile01P_" + startTime + ".csv";
+    fileName02 = "logFile02P_" + startTime + ".csv";
     let column = 'time,x,y,dX,dY,conON,delayTime';
     if (N == 1) {
         fs.writeFile(logDir + fileName01, column, function (err) {
@@ -111,6 +129,7 @@ function writeCSV(x, y, drX, drY, conOn, filename, myTime) {
     getTimeFoundation();
 
     let writeDelay = timeSt - myTime;
+
     const data = [
         { time: timeSt, x: x, y: y, drX: drX, drY: drY, conOn: conOn, delayTime: writeDelay }
     ];
@@ -130,7 +149,7 @@ function writeCSV(x, y, drX, drY, conOn, filename, myTime) {
         });
 }
 
-io.sockets.on("connection", function (socket) {
+io.sockets.on("connection" , function (socket) {
     console.log("conecting");
     socket.on("memSyncFromCli", function () {
         console.log("\"memSync\" is ignite from cliant. member:");
@@ -141,10 +160,8 @@ io.sockets.on("connection", function (socket) {
         console.log("\"login\" is ignite from cliant." + pNum);
         // プレイヤー番号の割り振り
         if (pNum == 1) {
-            //createCSV(1);
             pOne = true;
         } else if (pNum == 2) {
-            //createCSV(2);
             pTwo = true;
         } else {
             ;
@@ -162,6 +179,8 @@ io.sockets.on("connection", function (socket) {
     socket.on("closeLoginFromCli", function () {
         // ログイン処理を終える
 
+        createCSV(1);
+        createCSV(2);
         console.log("\"closeLogin\" is ignite from cliant.");
         io.sockets.emit("closeLoginFromSvr");
     });
@@ -170,10 +189,10 @@ io.sockets.on("connection", function (socket) {
         // スタート時の初期化処理
         console.log("\"startStage\" is ignite from cliant." + pNum);
         console.log("Variables used on the stage have been initialized.");
-        nowX1 = 40;
-        nowX2 = 90;
-        nowY1 = 200;
-        nowY2 = 200;
+        nowX1 = defaultX1;
+        nowX2 = defaultX2;
+        nowY1 = defaultY1;
+        nowY2 = defaultY2;
 
         io.sockets.emit("startStageFromSvr", nowX1, nowY1, nowX2, nowY2);
     });
@@ -190,7 +209,7 @@ io.sockets.on("connection", function (socket) {
         drY02 = sendFrY;
 
         io.sockets.emit("infoPosForOne", nowX2, nowY2, vecX2, vecY2, time2);
-        //writeCSV(nowX1, nowY1, drX02, drY02, sendConOn, fileName01, time1);
+        writeCSV(nowX1, nowY1, drX02, drY02, sendConOn, fileName01, time1);
     });
     //
     socket.on("sendTwoFromCli", function (sendx, sendy, sendVecX, sendVecY, sendt, sendFrX, sendFrY, sendConOn) {
@@ -205,7 +224,7 @@ io.sockets.on("connection", function (socket) {
         drY01 = sendFrY;
 
         io.sockets.emit("infoPosForTwo", nowX1, nowY1, vecX1, vecY1, time1);
-        //writeCSV(nowX2, nowY2, drX01, drY01, sendConOn, fileName02, time2);
+        writeCSV(nowX2, nowY2, drX01, drY01, sendConOn, fileName02, time2);
     });
 
     socket.on("lisPosFromOne", function () {

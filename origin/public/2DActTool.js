@@ -5,6 +5,7 @@
  * ・judgeOnTheSquare
  * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
 
+
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
  * ━━━━━━━━━━━━━━━━━━━━━━━━━┛
  * */
@@ -262,6 +263,15 @@ function qGravity2D(nowX, nowY, vctr, speedX, speedY, acclG) {
 }
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━┛
+ * 2Dでの重力処理
+ * 三角関数を使い任意の方向に重力を発生させる
+ * 後で作ります*/
+function fGravity2D() {
+    ;
+}
+
+/**━━━━━━━━━━━━━━━━━━━━━━━━━┓
  * ━━━━━━━━━━━━━━━━━━━━━━━━━┛ 
  * xへの等速移動*/
 function moveX() {
@@ -365,16 +375,6 @@ function xAccel(
 }
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
- * ━━━━━━━━━━━━━━━━━━━━━━━━━┛
- * 2Dでの重力処理
- * 三角関数を使い任意の方向に重力を発生させる
- * 後で作ります*/
-function fGravity2D() {
-    ;
-}
-
-
-/**━━━━━━━━━━━━━━━━━━━━━━━━━┓
  * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫
  * stDRecon(standard Dead Reckoning)
  * 相方から貰った前フレームの座標を用いて
@@ -400,6 +400,124 @@ function stDRecon(
     console.log(nowArrayMyVertex.x);
     return nowArrayMyVertex;
 }
+
+/**━━━━━━━━━━━━━━━━━━━━━━━━━┓
+ * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫ 
+ * calCircle
+ * 三点の座標から円を算出する
+ * 中心点の座標と、中心点からの半径を出力する
+ * 
+ * 
+ * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
+function calCircle(
+    x0, y0, x1, y1, x2, y2
+) {
+    // 2点を結ぶ線分の垂直2等分線を求める処理
+    sect = function (x1, y1, x2, y2) {
+        // 直線の係数を求める
+        var a = (y2 - y1) / (x2 - x1);
+        var b = y1 - (a * x1);
+        // 直線の中点を求める
+        var mx = x1 + ((x2 - x1) / 2);
+        var my = y1 + ((y2 - y1) / 2);
+        // 直線の垂直二等分線の係数を求める
+        var aa = -1 / a;
+        var bb = my - (aa * mx);
+        return [mx, my, aa, bb];
+    }
+    ret = sect(x0, y0, x1, y1);
+    m1 = [ret[0], ret[1]];              // 中点座標
+    ab = [ret[2], ret[3]];
+    ret = sect(x1, y1, x2, y2);
+    m2 = [ret[0], ret[1]];
+    cd = [ret[2], ret[3]];
+
+    // 二つの垂直二等分線の交点、つまりは中心点を求める
+    // 解法）x = (-1/(-a+c) * -b) + (1/(-a+c) * -d)
+    //       y = (-c/(-a+c) * -b) + (a/(-a+c) * -d)
+    var z = 1 / (-ab[0] + cd[0]);                   // z = 1/(-a+c)
+    cx = z * (-1 * -ab[1] + 1 * -cd[1]);    // x = z * (-1 * -b + 1 * -d)
+    cy = z * (-cd[0] * -ab[1] + ab[0] * -cd[1]);    // y = z * (-c * -b + a * -d)
+
+    // 円の半径
+    var r = Math.sqrt(Math.pow(cx - x0, 2) + Math.pow(cy - y0, 2));
+
+    return { cx, cy, r };
+}
+
+/**━━━━━━━━━━━━━━━━━━━━━━━━━┓
+ * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫ 
+ * calAngAccel(calculate angular acceleration)
+ * 三点の座標と各点が持つ時刻(フレーム)の差分から角速度と角加速度を算出する
+ * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
+function calAngAccel(
+    x_last,
+    y_last,
+    f_last,
+    x_pre,
+    y_pre,
+    f_pre,
+    x_pre2,
+    y_pre2,
+    f_pre2
+) {
+    // まず3点から円の中心点と半径をcalcCircleを用いて求める
+    circle = calCircle(x_last, y_last, x_pre, y_pre, x_pre2, y_pre2,);
+    cx = circle.cx;
+    cy = circle.cy;
+    r = circle.r;
+
+    // 各2点間の角度を求める
+    rad = function (x0, y0, x1, y1) { return Math.atan2(y1 - y0, x1 - x0) }
+    rad_ltoP = rad(x_last, y_last, x_pre, y_pre);
+    rad_ptoP2 = rad(x_pre, y_pre, x_pre2, y_pre2);
+
+    // 3点の角度の変化が少ない場合は円ではないとして計算を飛ばす
+    if (Math.abs(rad_ltoP) > 0.0001 && Math.abs(rad_ptoP2) > 0.0001) {
+        // 各2点間の角速度を求める
+        vel_ptoP2 = rad_ptoP2 / (f_pre - f_pre2);
+        vel_ltoP = rad_ltoP / (f_last - f_pre);
+
+        acl_ltoP = vel_ltoP / (f_last - f_pre);
+
+        return { vel_ltoP, acl_ltoP };
+    } else {
+        return "I_am_straight_line.";
+    }
+}
+
+
+/**━━━━━━━━━━━━━━━━━━━━━━━━━┓
+ * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫ 
+ * cirPred(Circular Prediction)
+ * 
+ * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
+function cirPred(
+    lastX,
+    lastY,
+    cirX,
+    cirY,
+    rudius,
+    angVel,
+    angAccel,
+
+    maxAngVel=30,
+    debug = 0
+) {
+    rad = Math.atan2(lastY + (-1 * cirY), lastX + (-1 * cirX));
+
+    console.log(angVel+"+"+angAccel);
+    angVel += angAccel;
+    if(angVel>maxAngVel){angVel=maxAngVel;}
+    rad += angVel*Math.PI/180
+
+    calX = rudius * Math.cos(rad) + cirX;
+    calY = rudius * Math.sin(rad) + cirY;
+
+    return {calX, calY, angVel,rudius};
+}
+
+
 
 /**━━━━━━━━━━━━━━━━━━━━━━━━━┓
  * ┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┯┫

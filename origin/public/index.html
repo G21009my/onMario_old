@@ -47,6 +47,9 @@
         const fps_d = 30;
         let fps = oSec / fps_d; // 画面の更新間隔
 
+        let totalF=0; // 累計フレーム数
+        let lastCalF=0;//最後に角加速度を求めたF
+
         //1Pの座標
         let nowX1 = 40;
         let nowY1 = 0;
@@ -65,14 +68,21 @@
         let PH = 32;
 
         // 相方と送受信する系の情報
+        let preFriendX=0;
+        let preFriendY=0;
+        let preFriendF=0;
+
         let lastFriendX = 0;
         let lastFriendY = 0;
+        let lastFriendF =0;
 
         let nowFriendX = 0;
         let nowFriendY = 0;
+        let nowFriendF = 0;
 
         let updatedFriendX = 0;
         let updatedFriendY = 0;
+        let updatedFriendF=0;
 
         let arrMyX = Array.from({ length: 10 }, () => 0);
         let arrMyY = Array.from({ length: 10 }, () => 0);
@@ -141,7 +151,7 @@
         const resistPower = 0.5;
         const resistFlag = 0;
 
-        // 遅延0のやつ
+        // 遅延0のやつ(ローカル環境のみ)
         let fastInterFrX = 0;
         let fastInterFrY = 0;
 
@@ -289,6 +299,10 @@
             // 後でプレイヤーで発火を限定する予定
             if (pnum == 1) {
                 //console.log("infoP1");
+                preFriendX=lastFriendX;
+                preFriendY=lastFriendY;
+                lastFriendX=updatedFriendX;
+                lastFriendY=updatedFriendY;
                 updatedFriendX = svX;
                 updatedFriendY = svY;
                 friendVecX = svVecX;
@@ -303,8 +317,15 @@
             // 同上
             if (pnum == 2) {
                 //console.log("infoP2");
+                preFriendX=lastFriendX;
+                preFriendY=lastFriendY;
+                preFriendF=lastFriendF;
+                lastFriendX=updatedFriendX;
+                lastFriendY=updatedFriendY;
+                lastFriendF=updatedFriendF;
                 updatedFriendX = svX;
                 updatedFriendY = svY;
+                updatedFriendF=totalF;
                 friendVecX = svVecX;
                 friendvecY = svVecY;
                 FrTime = svT;
@@ -621,6 +642,8 @@
          * ここからmain関数
          * ┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┷┛*/
         function main() {
+            totalF+=1;
+
             // 画面全体をクリア
             ctx.clearRect(0, 0, 700, 500);
 

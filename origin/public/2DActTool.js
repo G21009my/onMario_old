@@ -472,7 +472,7 @@ function calAngAccel(
     rad_ltoP = rad(x_last, y_last, x_pre, y_pre);
     rad_ptoP2 = rad(x_pre, y_pre, x_pre2, y_pre2);
 
-    // 3点の角度の変化が少ない場合は円ではないとして計算を飛ばす
+    // 3点の角度の変化が少ない場合は円ではないとして計算を飛ばす（極限値みたいな角度を出されるとオーバーフローするので）
     if (Math.abs(rad_ltoP) > 0.0001 && Math.abs(rad_ptoP2) > 0.0001) {
         // 各2点間の角速度を求める
         vel_ptoP2 = rad_ptoP2 / (f_pre - f_pre2);
@@ -536,5 +536,4 @@ function dRecon(
     delayArrayOtherVertex
 ) {
     // cubic spline を実装する
-    // 全然わからーーーーーん
 }

@@ -3,9 +3,10 @@ const app = express();
 const http = require("http");
 const server = http.createServer(app);
 const io = require("socket.io").listen(server);
+const port = 8080;
 
 app.use("/", express.static(__dirname + "/public"));//このディレクトリの奴を使用可的な
-server.listen(8080);
+server.listen(port);
 
 //console.log(sv);
 let logDir = __dirname + "\\log\\"; // ログファイルのディレクトリ
@@ -63,11 +64,6 @@ let vecY2 = 0;
 let drX01 = 0;
 let drY01 = 0;
 
-let arrayX1 =[...Array(10)].map(() => defaultX1);
-let arrayX2 =[...Array(10)].map(() => defaultX2);
-let arrayY1 =[...Array(10)].map(() => defaultY1);
-let arrayY2 =[...Array(10)].map(() => defaultY2);
-
 let time2 = 0;
 
 let die1 = false;
@@ -99,9 +95,6 @@ function getTimeLocal() { // timeStをローカルで更新(ntpとかで聞い�
     return gotNowMyTime;
 }
 
-function getShortTimeLocal(){
-    
-}
 
 // ログファイルの生成
 function createCSV(N) {
@@ -241,7 +234,7 @@ io.sockets.on("connection" , function (socket) {
         console.log("Vec is...\nX1:" + vecX1 + " Y1:" + vecY1);
     });
 
-    // 遅延0の座標を見せる用のやつ。ローカル環境でしか使わない
+    // 遅延0の座標を見せる用のやつ。ローカル環境でしか使えない
     socket.on("fastLisFromOne", function (fNowX1, fNowY1) {
         io.sockets.emit("fastInfoForTwo", fNowX1, fNowY1);
     });
